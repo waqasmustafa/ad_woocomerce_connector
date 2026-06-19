@@ -234,7 +234,7 @@ class WooProduct(models.Model):
             ).create({
                 "name": name,
                 "default_code": sku,
-                "detailed_type": product_type,
+                "type": product_type if product_type in ("consu", "service") else "consu",
                 "categ_id": categ_id,
                 "list_price": list_price,
                 "weight": weight,
@@ -386,12 +386,13 @@ class WooProduct(models.Model):
             if backend.default_category_id
             else self.env.ref("product.product_category_goods").id
         )
+        _fallback_type = backend.default_product_type or "consu"
         new_product = self.env["product.product"].with_context(
             syncing_from_wc=True
         ).create({
             "name": item_name,
             "default_code": sku or False,
-            "detailed_type": backend.default_product_type or "consu",
+            "type": _fallback_type if _fallback_type in ("consu", "service") else "consu",
             "categ_id": categ_id,
             "list_price": self._safe_float(
                 item.get("price") or item.get("subtotal_tax") or 0
@@ -601,11 +602,12 @@ class WooProductTemplate(models.Model):
                 if backend.default_category_id
                 else self.env.ref("product.product_category_goods").id
             )
+            _ptype = backend.default_product_type or "consu"
             odoo_tmpl = self.env["product.template"].with_context(
                 syncing_from_wc=True
             ).create({
                 "name": name,
-                "detailed_type": backend.default_product_type or "consu",
+                "type": _ptype if _ptype in ("consu", "service") else "consu",
                 "categ_id": categ_id,
                 "list_price": list_price,
                 "sale_ok": True,
