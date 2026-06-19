@@ -13,6 +13,13 @@ def _fetch_image_b64(url):
     try:
         resp = requests.get(url, timeout=10)
         if resp.status_code == 200 and resp.content:
+            import io
+            from PIL import Image
+            try:
+                Image.open(io.BytesIO(resp.content)).verify()
+            except Exception:
+                _logger.warning("Image from %s failed PIL verify, skipping", url)
+                return None
             return base64.b64encode(resp.content).decode("utf-8")
     except Exception as e:
         _logger.warning("Could not download product image from %s: %s", url, e)
