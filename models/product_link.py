@@ -1,9 +1,22 @@
+import base64
 import logging
+
+import requests
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
+
+
+def _fetch_image_b64(url):
+    try:
+        resp = requests.get(url, timeout=10)
+        if resp.status_code == 200 and resp.content:
+            return base64.b64encode(resp.content).decode("utf-8")
+    except Exception as e:
+        _logger.warning("Could not download product image from %s: %s", url, e)
+    return None
 
 PRODUCT_STATUS = [
     ("draft", "Draft"),
@@ -241,6 +254,14 @@ class WooProduct(models.Model):
                 "sale_ok": True,
                 "purchase_ok": True,
             })
+
+        if images:
+            first_url = images.split(",")[0].strip()
+            img_b64 = _fetch_image_b64(first_url)
+            if img_b64:
+                odoo_product.product_tmpl_id.with_context(syncing_from_wc=True).write(
+                    {"image_1920": img_b64}
+                )
 
         vals["product_id"] = odoo_product.id
         binding = self.with_context(syncing_from_wc=True).create(vals)
@@ -613,6 +634,14 @@ class WooProductTemplate(models.Model):
                 "sale_ok": True,
                 "default_code": tmpl_sku or False,
             })
+
+        if images and not odoo_tmpl.image_1920:
+            first_url = images.split(",")[0].strip()
+            img_b64 = _fetch_image_b64(first_url)
+            if img_b64:
+                odoo_tmpl.with_context(syncing_from_wc=True).write(
+                    {"image_1920": img_b64}
+                )
 
         vals["template_id"] = odoo_tmpl.id
         vals["name"] = name
