@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <record id="wc_status_pending" model="wc.order.stage">
+        <field name="name">Pending Payment</field>
+        <field name="code">pending</field>
+        <field name="sequence">1</field>
+        <field name="is_terminal" eval="False"/>
+        <field name="color">3</field>
+    </record>
+
+    <record id="wc_status_processing" model="wc.order.stage">
+        <field name="name">Processing</field>
+        <field name="code">processing</field>
+        <field name="sequence">2</field>
+        <field name="is_terminal" eval="False"/>
+        <field name="color">10</field>
+    </record>
+
+    <record id="wc_status_on_hold" model="wc.order.stage">
+        <field name="name">On Hold</field>
+        <field name="code">on-hold</field>
+        <field name="sequence">3</field>
+        <field name="is_terminal" eval="False"/>
+        <field name="color">2</field>
+    </record>
+
+    <record id="wc_status_completed" model="wc.order.stage">
+        <field name="name">Completed</field>
+        <field name="code">completed</field>
+        <field name="sequence">4</field>
+        <field name="is_terminal" eval="True"/>
+        <field name="color">10</field>
+    </record>
+
+    <record id="wc_status_cancelled" model="wc.order.stage">
+        <field name="name">Cancelled</field>
+        <field name="code">cancelled</field>
+        <field name="sequence">5</field>
+        <field name="is_terminal" eval="True"/>
+        <field name="color">1</field>
+    </record>
+
+    <record id="wc_status_refunded" model="wc.order.stage">
+        <field name="name">Refunded</field>
+        <field name="code">refunded</field>
+        <field name="sequence">6</field>
+        <field name="is_terminal" eval="True"/>
+        <field name="color">1</field>
+    </record>
+
+    <record id="wc_status_failed" model="wc.order.stage">
+        <field name="name">Failed</field>
+        <field name="code">failed</field>
+        <field name="sequence">7</field>
+        <field name="is_terminal" eval="True"/>
+        <field name="color">1</field>
+    </record>
+
+    <record id="wc_status_checkout_draft" model="wc.order.stage">
+        <field name="name">Draft (Checkout)</field>
+        <field name="code">checkout-draft</field>
+        <field name="sequence">8</field>
+        <field name="is_terminal" eval="False"/>
+        <field name="color">0</field>
+    </record>
+
+</odoo>

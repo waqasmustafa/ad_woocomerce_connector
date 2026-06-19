@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_wc_store_form" model="ir.ui.view">
+        <field name="name">wc.store.form</field>
+        <field name="model">wc.store</field>
+        <field name="arch" type="xml">
+            <form string="WooCommerce Store Configuration">
+                <header>
+                    <button name="action_verify_connection"
+                            string="Verify Connection"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-plug"/>
+                    <button name="action_generate_webhook_token"
+                            string="Generate Webhook Token"
+                            type="object"
+                            icon="fa-key"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_orders"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-shopping-cart">
+                            <field name="order_count" widget="statinfo" string="Orders"/>
+                        </button>
+                        <button name="action_view_products"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-cubes">
+                            <field name="product_count" widget="statinfo" string="Products"/>
+                        </button>
+                        <button name="action_view_customers"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-users">
+                            <field name="customer_count" widget="statinfo" string="Customers"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Sandbox" bg_color="text-bg-warning"
+                            invisible="not use_sandbox"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="My WooCommerce Store"/></h1>
+                    </div>
+
+                    <notebook>
+                        
+                        <page string="Connection" name="connection">
+                            <group>
+                                <group string="Live Credentials">
+                                    <field name="store_url" placeholder="https://yourshop.com" widget="url"/>
+                                    <field name="consumer_key" password="True"/>
+                                    <field name="consumer_secret" password="True"/>
+                                    <field name="api_version"/>
+                                </group>
+                                <group string="Sandbox / Staging">
+                                    <field name="use_sandbox"/>
+                                    <field name="sandbox_url" placeholder="https://staging.yourshop.com"
+                                           widget="url" invisible="not use_sandbox"/>
+                                    <field name="sandbox_key" password="True"
+                                           invisible="not use_sandbox"/>
+                                    <field name="sandbox_secret" password="True"
+                                           invisible="not use_sandbox"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Data Synchronization" name="sync">
+                            <group string="Pull Data from WooCommerce">
+                                <group>
+                                    <button name="action_pull_metadata"
+                                            string="↓ Refresh Shipping &amp; Payment Methods"
+                                            type="object" class="btn-outline-primary oe_link"/>
+                                    <button name="action_pull_categories"
+                                            string="↓ Pull Product Categories"
+                                            type="object" class="btn-outline-primary oe_link"/>
+                                    <button name="action_pull_tags"
+                                            string="↓ Pull Product Tags"
+                                            type="object" class="btn-outline-primary oe_link"/>
+                                    <button name="action_pull_attributes"
+                                            string="↓ Pull Product Attributes"
+                                            type="object" class="btn-outline-primary oe_link"/>
+                                    <button name="action_pull_taxes"
+                                            string="↓ Pull Tax Rates"
+                                            type="object" class="btn-outline-primary oe_link"/>
+                                </group>
+                                <group>
+                                    <button name="action_pull_customers"
+                                            string="↓ Pull Customers"
+                                            type="object" class="btn-outline-primary oe_link"/>
+                                    <button name="action_pull_products"
+                                            string="↓ Pull Simple Products"
+                                            type="object" class="btn-outline-primary oe_link"/>
+                                    <button name="action_pull_variable_products"
+                                            string="↓ Pull Variable Products"
+                                            type="object" class="btn-outline-primary oe_link"/>
+                                    <button name="action_pull_orders"
+                                            string="↓ Pull Sale Orders"
+                                            type="object" class="btn-outline-primary oe_link"/>
+                                </group>
+                            </group>
+                            <separator string="Push Data to WooCommerce"/>
+                            <group>
+                                <group>
+                                    <button name="action_push_stock"
+                                            string="↑ Push Stock Quantities"
+                                            type="object" class="btn-outline-secondary oe_link"/>
+                                    <button name="action_push_order_statuses"
+                                            string="↑ Push Order Fulfillment Statuses"
+                                            type="object" class="btn-outline-secondary oe_link"/>
+                                </group>
+                            </group>
+                            <separator string="Sync Timestamps"/>
+                            <group>
+                                <group>
+                                    <field name="customers_last_sync" readonly="1"/>
+                                    <field name="products_last_sync" readonly="1"/>
+                                    <field name="orders_last_sync" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Order Settings" name="orders">
+                            <group>
+                                <group string="Order Defaults">
+                                    <field name="order_name_prefix"/>
+                                    <field name="warehouse_id"/>
+                                    <field name="sales_team_id"/>
+                                    <field name="company_id" groups="base.group_multi_company"/>
+                                </group>
+                                <group string="Fulfillment">
+                                    <field name="push_fulfillment_status"/>
+                                    <field name="push_tracking_info"
+                                           invisible="not push_fulfillment_status"/>
+                                    <field name="default_shipping_product_id"/>
+                                    <field name="default_fee_product_id"/>
+                                </group>
+                            </group>
+                            <group string="Status Filter">
+                                <field name="allowed_order_status_ids" widget="many2many_tags"
+                                       options="{'color_field': 'color'}" nolabel="1" colspan="2"/>
+                            </group>
+                        </page>
+
+                        <page string="Product Settings" name="products">
+                            <group>
+                                <group>
+                                    <field name="default_product_type"/>
+                                    <field name="default_category_id"/>
+                                    <field name="allow_products_without_sku"/>
+                                    <field name="match_product_by_sku"/>
+                                </group>
+                                <group string="Stock Sync">
+                                    <field name="push_stock_to_store"/>
+                                    <field name="stock_warehouse_ids" widget="many2many_tags"
+                                           invisible="not push_stock_to_store"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Customer Settings" name="customers">
+                            <group>
+                                <field name="allow_customers_without_email"/>
+                            </group>
+                        </page>
+
+                        <page string="Technical" name="technical">
+                            <group>
+                                <group>
+                                    <field name="records_per_page"/>
+                                    <field name="active"/>
+                                </group>
+                                <group string="Webhooks">
+                                    <field name="webhook_token" readonly="1"/>
+                                </group>
+                            </group>
+                            <separator string="Webhook Setup Instructions"/>
+                            <field name="webhook_instructions" readonly="1" nolabel="1"/>
+                        </page>
+
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_wc_store_list" model="ir.ui.view">
+        <field name="name">wc.store.list</field>
+        <field name="model">wc.store</field>
+        <field name="arch" type="xml">
+            <list string="WooCommerce Stores" decoration-muted="not active">
+                <field name="name"/>
+                <field name="store_url" widget="url"/>
+                <field name="use_sandbox"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="orders_last_sync"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_wc_store" model="ir.actions.act_window">
+        <field name="name">WooCommerce Stores</field>
+        <field name="res_model">wc.store</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Connect your first WooCommerce store
+            </p>
+            <p>
+                Add your store URL and API credentials to start syncing products,
+                customers, and orders between WooCommerce and Odoo.
+            </p>
+        </field>
+    </record>
+
+</odoo>

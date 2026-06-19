@@ -1,0 +1,176 @@
+.wc-dashboard-container {
+    font-family: 'Outfit', sans-serif;
+    background-color: #f8fafc;
+    padding: 24px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.wc-dashboard-container .wc-dashboard-header {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.wc-dashboard-container .wc-store-select {
+    width: 220px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    padding: 8px 14px;
+    font-weight: 600;
+    color: #334155;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.wc-dashboard-container .wc-store-select:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    outline: none;
+}
+
+.wc-dashboard-container .wc-card {
+    border-radius: 20px;
+    border: none;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+    min-height: 145px;
+}
+
+.wc-dashboard-container .wc-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 35px rgba(0, 0, 0, 0.08);
+}
+
+.wc-dashboard-container .wc-grad-revenue {
+    background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+    color: white;
+}
+
+.wc-dashboard-container .wc-grad-orders {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.wc-dashboard-container .wc-grad-products {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.wc-dashboard-container .wc-grad-customers {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: white;
+}
+
+.wc-dashboard-container .wc-card-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    opacity: 0.85;
+}
+
+.wc-dashboard-container .wc-card-value {
+    font-size: 2.3rem;
+    font-weight: 700;
+    margin-top: 5px;
+    letter-spacing: -0.5px;
+}
+
+.wc-dashboard-container .wc-card-icon {
+    position: absolute;
+    right: 24px;
+    top: 24px;
+    font-size: 3.2rem;
+    opacity: 0.15;
+    transition: transform 0.3s ease;
+}
+
+.wc-dashboard-container .wc-card:hover .wc-card-icon {
+    transform: scale(1.15) rotate(-8deg);
+}
+
+.wc-dashboard-container .wc-sparkline-box {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    opacity: 0.45;
+}
+
+.wc-dashboard-container .wc-panel {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.015);
+    border: 1px solid #f1f5f9;
+    overflow: hidden;
+}
+
+.wc-dashboard-container .wc-panel-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    padding: 20px 24px;
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: #0f172a;
+}
+
+.wc-dashboard-container .text-indigo {
+    color: #4f46e5;
+}
+
+.wc-dashboard-container .table {
+    margin-bottom: 0;
+}
+
+.wc-dashboard-container .table th {
+    background-color: #f8fafc;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 14px 24px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.wc-dashboard-container .table td {
+    padding: 16px 24px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+    font-size: 0.9rem;
+}
+
+.wc-dashboard-container .table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.wc-dashboard-container .table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.wc-dashboard-container .table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.wc-dashboard-container .progress {
+    background-color: #f1f5f9;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+}
+
+.wc-dashboard-container .progress-bar {
+    font-weight: 700;
+    font-size: 0.78rem;
+    line-height: 32px;
+    transition: width 0.6s ease;
+}
+
+.wc-dashboard-container .badge {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.75rem;
+}

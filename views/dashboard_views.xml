@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="action_wc_dashboard" model="ir.actions.client">
+        <field name="name">WooCommerce Dashboard</field>
+        <field name="tag">wc_dashboard_client_action</field>
+        <field name="target">current</field>
+    </record>
+
+</odoo>

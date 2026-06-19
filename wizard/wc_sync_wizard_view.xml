@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_wc_sync_wizard_form" model="ir.ui.view">
+        <field name="name">wc.sync.wizard.form</field>
+        <field name="model">wc.sync.wizard</field>
+        <field name="arch" type="xml">
+            <form string="WooCommerce Sync">
+                <sheet>
+                    <div class="oe_title">
+                        <h2>Run WooCommerce Sync</h2>
+                    </div>
+                    <group invisible="state == 'done'">
+                        <field name="state" invisible="1"/>
+                        <field name="backend_id"/>
+                        <field name="sync_action" widget="radio"/>
+                        <field name="force_resync"/>
+                    </group>
+                    <group invisible="state != 'done'">
+                        <field name="result_summary" nolabel="1" readonly="1"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button
+                        name="action_run_sync"
+                        string="Run Sync"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state == 'done'"
+                    />
+                    <button
+                        name="action_close"
+                        string="Close"
+                        type="object"
+                        class="btn-secondary"
+                    />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_wc_sync_wizard" model="ir.actions.act_window">
+        <field name="name">Run WooCommerce Sync</field>
+        <field name="res_model">wc.sync.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

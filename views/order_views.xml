@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_wc_order_list" model="ir.ui.view">
+        <field name="name">wc.order.list</field>
+        <field name="model">wc.order</field>
+        <field name="arch" type="xml">
+            <list string="WooCommerce Orders">
+                <field name="name"/>
+                <field name="wc_order_number"/>
+                <field name="partner_id"/>
+                <field name="wc_status_id"/>
+                <field name="wc_payment_mode_id"/>
+                <field name="wc_order_total" sum="Total"/>
+                <field name="external_id"/>
+                <field name="backend_id"/>
+                <field name="sync_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_wc_order_form" model="ir.ui.view">
+        <field name="name">wc.order.form</field>
+        <field name="model">wc.order</field>
+        <field name="arch" type="xml">
+            <form string="WooCommerce Order Binding">
+                <header>
+                    <button name="push_status_to_store" string="Push to WooCommerce" type="object" class="btn-primary" invisible="not external_id"/>
+                    <button name="pull_from_store" string="Pull from WooCommerce" type="object" invisible="not external_id"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Order Details">
+                            <field name="order_id"/>
+                            <field name="wc_order_number"/>
+                            <field name="wc_order_key"/>
+                            <field name="wc_status_id"/>
+                            <field name="wc_payment_mode_id"/>
+                            <field name="wc_fulfillment_status"/>
+                        </group>
+                        <group string="Totals">
+                            <field name="wc_discount_total"/>
+                            <field name="wc_shipping_total"/>
+                            <field name="wc_total_tax"/>
+                            <field name="wc_order_total"/>
+                            <field name="wc_coupon_codes"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <group string="Binding">
+                        <group>
+                            <field name="external_id" readonly="1"/>
+                            <field name="backend_id"/>
+                            <field name="sync_date"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="wc_customer_link_note"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_sale_order_form_wc" model="ir.ui.view">
+        <field name="name">sale.order.form.wc</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_push_wc_status"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-cloud-upload"
+                        invisible="not wc_bind_ids">
+                    <span>Push WC Status</span>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_wc_order_graph" model="ir.ui.view">
+        <field name="name">wc.order.graph</field>
+        <field name="model">wc.order</field>
+        <field name="arch" type="xml">
+            <graph string="WooCommerce Sales Analysis" type="bar" sample="1">
+                <field name="wc_status_id"/>
+                <field name="wc_order_total" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_wc_order_pivot" model="ir.ui.view">
+        <field name="name">wc.order.pivot</field>
+        <field name="model">wc.order</field>
+        <field name="arch" type="xml">
+            <pivot string="WooCommerce Sales Analysis" sample="1">
+                <field name="sync_date" type="row"/>
+                <field name="wc_status_id" type="col"/>
+                <field name="wc_order_total" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="action_wc_order" model="ir.actions.act_window">
+        <field name="name">WooCommerce Orders</field>
+        <field name="res_model">wc.order</field>
+        <field name="view_mode">list,form,graph,pivot</field>
+    </record>
+
+    <record id="action_push_wc_status_server" model="ir.actions.server">
+        <field name="name">Push to WooCommerce</field>
+        <field name="model_id" ref="ad_woocomerce_connector.model_wc_order"/>
+        <field name="binding_model_id" ref="ad_woocomerce_connector.model_wc_order"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+            if records:
+                action = records.push_status_to_store()
+        </field>
+    </record>
+
+    <record id="action_pull_wc_order_from_store_server" model="ir.actions.server">
+        <field name="name">Pull from WooCommerce</field>
+        <field name="model_id" ref="ad_woocomerce_connector.model_wc_order"/>
+        <field name="binding_model_id" ref="ad_woocomerce_connector.model_wc_order"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+            if records:
+                action = records.pull_from_store()
+        </field>
+    </record>
+
+</odoo>

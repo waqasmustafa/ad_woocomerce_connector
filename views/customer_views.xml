@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_wc_customer_link_list" model="ir.ui.view">
+        <field name="name">wc.customer.link.list</field>
+        <field name="model">wc.customer.link</field>
+        <field name="arch" type="xml">
+            <list string="WooCommerce Customers">
+                <field name="name"/>
+                <field name="email"/>
+                <field name="wc_username"/>
+                <field name="wc_role"/>
+                <field name="external_id"/>
+                <field name="backend_id"/>
+                <field name="sync_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_wc_customer_link_form" model="ir.ui.view">
+        <field name="name">wc.customer.link.form</field>
+        <field name="model">wc.customer.link</field>
+        <field name="arch" type="xml">
+            <form string="WooCommerce Customer">
+                <header>
+                    <button name="push_to_store" string="Push to WooCommerce" type="object" class="btn-primary"/>
+                    <button name="pull_from_store" string="Pull from WooCommerce" type="object" invisible="not external_id"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="email"/>
+                            <field name="partner_id"/>
+                            <field name="wc_username"/>
+                        </group>
+                        <group>
+                            <field name="external_id" readonly="1"/>
+                            <field name="backend_id"/>
+                            <field name="wc_role"/>
+                            <field name="wc_orders_count"/>
+                            <field name="wc_total_spent"/>
+                            <field name="sync_date"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_wc_customer_link" model="ir.actions.act_window">
+        <field name="name">WooCommerce Customers</field>
+        <field name="res_model">wc.customer.link</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_push_wc_customer_to_store_server" model="ir.actions.server">
+        <field name="name">Push to WooCommerce</field>
+        <field name="model_id" ref="ad_woocomerce_connector.model_wc_customer_link"/>
+        <field name="binding_model_id" ref="ad_woocomerce_connector.model_wc_customer_link"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+            if records:
+                action = records.push_to_store()
+        </field>
+    </record>
+
+    <record id="action_pull_wc_customer_from_store_server" model="ir.actions.server">
+        <field name="name">Pull from WooCommerce</field>
+        <field name="model_id" ref="ad_woocomerce_connector.model_wc_customer_link"/>
+        <field name="binding_model_id" ref="ad_woocomerce_connector.model_wc_customer_link"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+            if records:
+                action = records.pull_from_store()
+        </field>
+    </record>
+
+</odoo>

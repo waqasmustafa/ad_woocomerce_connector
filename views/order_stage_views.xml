@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_wc_order_stage_list" model="ir.ui.view">
+        <field name="name">wc.order.stage.list</field>
+        <field name="model">wc.order.stage</field>
+        <field name="arch" type="xml">
+            <list string="WooCommerce Order Statuses" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="is_terminal"/>
+                <field name="color" widget="color_picker"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_wc_order_stage" model="ir.actions.act_window">
+        <field name="name">WooCommerce Order Statuses</field>
+        <field name="res_model">wc.order.stage</field>
+        <field name="view_mode">list</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_wc_product_list" model="ir.ui.view">
+        <field name="name">wc.product.link.list</field>
+        <field name="model">wc.product.link</field>
+        <field name="arch" type="xml">
+            <list string="WooCommerce Products">
+                <field name="wc_product_name"/>
+                <field name="wc_sku"/>
+                <field name="wc_status"/>
+                <field name="wc_stock_status"/>
+                <field name="wc_regular_price"/>
+                <field name="external_id"/>
+                <field name="backend_id"/>
+                <field name="sync_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_wc_product_form" model="ir.ui.view">
+        <field name="name">wc.product.link.form</field>
+        <field name="model">wc.product.link</field>
+        <field name="arch" type="xml">
+            <form string="WooCommerce Product">
+                <header>
+                    <button name="push_to_store" string="Push to WooCommerce" type="object" class="btn-primary"/>
+                    <button name="pull_from_store" string="Pull from WooCommerce" type="object" invisible="not external_id"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="WooCommerce Data">
+                            <field name="wc_product_name"/>
+                            <field name="wc_sku"/>
+                            <field name="wc_status"/>
+                            <field name="wc_stock_status"/>
+                            <field name="wc_manage_stock"/>
+                            <field name="wc_stock_qty"/>
+                            <field name="wc_regular_price"/>
+                            <field name="wc_sale_price"/>
+                            <field name="wc_weight"/>
+                        </group>
+                        <group string="Binding">
+                            <field name="product_id"/>
+                            <field name="external_id" readonly="1"/>
+                            <field name="backend_id"/>
+                            <field name="is_variation"/>
+                            <field name="wc_template_id" invisible="not is_variation"/>
+                            <field name="sync_date"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="wc_category_ids" widget="many2many_tags"/>
+                        <field name="wc_tag_ids" widget="many2many_tags"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_product_product_form_wc" model="ir.ui.view">
+        <field name="name">product.product.form.wc</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_normal_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_push_stock_to_store"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-refresh"
+                        invisible="not wc_bind_ids">
+                    <span>Push Stock</span>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_wc_product_link_graph" model="ir.ui.view">
+        <field name="name">wc.product.link.graph</field>
+        <field name="model">wc.product.link</field>
+        <field name="arch" type="xml">
+            <graph string="WooCommerce Product Analysis" type="bar" sample="1">
+                <field name="wc_status"/>
+                <field name="wc_stock_qty" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_wc_product_link_pivot" model="ir.ui.view">
+        <field name="name">wc.product.link.pivot</field>
+        <field name="model">wc.product.link</field>
+        <field name="arch" type="xml">
+            <pivot string="WooCommerce Product Analysis" sample="1">
+                <field name="wc_status" type="row"/>
+                <field name="wc_stock_status" type="col"/>
+                <field name="wc_stock_qty" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="action_wc_product_link" model="ir.actions.act_window">
+        <field name="name">WooCommerce Products</field>
+        <field name="res_model">wc.product.link</field>
+        <field name="view_mode">list,form,graph,pivot</field>
+    </record>
+    <record id="action_push_wc_product_to_store_server" model="ir.actions.server">
+        <field name="name">Push to WooCommerce</field>
+        <field name="model_id" ref="model_wc_product_link"/>
+        <field name="binding_model_id" ref="model_wc_product_link"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+            if records:
+                action = records.push_to_store()
+        </field>
+    </record>
+
+    <record id="action_pull_wc_product_from_store_server" model="ir.actions.server">
+        <field name="name">Pull from WooCommerce</field>
+        <field name="model_id" ref="ad_woocomerce_connector.model_wc_product_link"/>
+        <field name="binding_model_id" ref="ad_woocomerce_connector.model_wc_product_link"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+            if records:
+                action = records.pull_from_store()
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+    <t t-name="ad_woocomerce_connector.WooDashboard">
+        <div class="wc-dashboard-container">
+            <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&amp;display=swap" rel="stylesheet"/>
+            
+            <div class="wc-dashboard-header d-flex align-items-center justify-content-between p-4 mb-4">
+                <div class="d-flex align-items-center">
+                    <h1 class="h3 m-0 font-weight-bold text-dark">WooCommerce Insights</h1>
+                    <select class="form-select ms-3 wc-store-select" t-on-change="onStoreChange" t-model="state.selectedStoreId">
+                        <option value="">All Stores</option>
+                        <t t-foreach="state.stores" t-as="store" t-key="store.id">
+                            <option t-att-value="store.id"><t t-esc="store.name"/></option>
+                        </t>
+                    </select>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary d-flex align-items-center gap-2" t-on-click="actionSyncWizard">
+                        <i class="fa fa-refresh"></i> Run Sync Wizard
+                    </button>
+                    <button class="btn btn-secondary d-flex align-items-center gap-2" t-on-click="actionRefresh">
+                        <i class="fa fa-undo"></i> Refresh Data
+                    </button>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card wc-card wc-grad-revenue p-4 h-100 position-relative overflow-hidden" t-on-click="openOrders" style="cursor: pointer;">
+                        <div class="wc-card-title mb-2">Total Sales Revenue</div>
+                        <div class="wc-card-value" t-esc="formatCurrency(state.stats.total_revenue)"/>
+                        <div class="wc-sparkline-box">
+                            <svg width="100%" height="100%" viewBox="0 0 200 50" preserveAspectRatio="none">
+                                <defs>
+                                    <linearGradient id="sparkGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.4"/>
+                                        <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0"/>
+                                    </linearGradient>
+                                </defs>
+                                <path t-att-d="state.stats.path_d" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path t-att-d="state.stats.area_d" fill="url(#sparkGradient)"/>
+                            </svg>
+                        </div>
+                        <div class="wc-card-icon">
+                            <i class="fa fa-line-chart"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card wc-card wc-grad-orders p-4 h-100 position-relative overflow-hidden" t-on-click="openOrders" style="cursor: pointer;">
+                        <div class="wc-card-title mb-2">Orders Synced</div>
+                        <div class="wc-card-value" t-esc="state.stats.order_count"/>
+                        <div class="wc-card-icon">
+                            <i class="fa fa-shopping-basket"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card wc-card wc-grad-products p-4 h-100 position-relative overflow-hidden" t-on-click="openProducts" style="cursor: pointer;">
+                        <div class="wc-card-title mb-2">Products Synced</div>
+                        <div class="wc-card-value" t-esc="state.stats.product_count"/>
+                        <div class="wc-card-icon">
+                            <i class="fa fa-cubes"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card wc-card wc-grad-customers p-4 h-100 position-relative overflow-hidden" t-on-click="openCustomers" style="cursor: pointer;">
+                        <div class="wc-card-title mb-2">Customers Synced</div>
+                        <div class="wc-card-value" t-esc="state.stats.customer_count"/>
+                        <div class="wc-card-icon">
+                            <i class="fa fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                
+                <div class="col-md-6 mb-3">
+                    <div class="card wc-panel h-100">
+                        <div class="wc-panel-header d-flex justify-content-between align-items-center">
+                            <span><i class="fa fa-pie-chart text-indigo me-2"></i> Order Status Distribution</span>
+                            <span class="badge bg-secondary"><t t-esc="state.stats.total_orders"/> Total</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="progress mb-4" style="height: 32px; border-radius: 16px; overflow: hidden; cursor: pointer;" t-on-click="openOrders">
+                                <div class="progress-bar bg-success" t-att-style="'width: ' + state.stats.pct_completed + '%'" title="Completed">
+                                    <t t-esc="state.stats.pct_completed"/>% Done
+                                </div>
+                                <div class="progress-bar bg-primary" t-att-style="'width: ' + state.stats.pct_processing + '%'" title="Processing">
+                                    <t t-esc="state.stats.pct_processing"/>% Proc
+                                </div>
+                                <div class="progress-bar bg-warning text-dark" t-att-style="'width: ' + state.stats.pct_on_hold + '%'" title="On Hold">
+                                    <t t-esc="state.stats.pct_on_hold"/>% Hold
+                                </div>
+                                <div class="progress-bar bg-danger" t-att-style="'width: ' + state.stats.pct_cancelled + '%'" title="Cancelled">
+                                    <t t-esc="state.stats.pct_cancelled"/>% Can
+                                </div>
+                            </div>
+                            <div class="row text-center mt-3">
+                                <div class="col-3" t-on-click="openOrders" style="cursor: pointer;">
+                                    <div class="small text-muted mb-1">Completed</div>
+                                    <div class="fw-bold text-success" t-esc="state.stats.completed_count"/>
+                                </div>
+                                <div class="col-3" t-on-click="openOrders" style="cursor: pointer;">
+                                    <div class="small text-muted mb-1">Processing</div>
+                                    <div class="fw-bold text-primary" t-esc="state.stats.processing_count"/>
+                                </div>
+                                <div class="col-3" t-on-click="openOrders" style="cursor: pointer;">
+                                    <div class="small text-muted mb-1">On Hold</div>
+                                    <div class="fw-bold text-warning" t-esc="state.stats.on_hold_count"/>
+                                </div>
+                                <div class="col-3" t-on-click="openOrders" style="cursor: pointer;">
+                                    <div class="small text-muted mb-1">Cancelled</div>
+                                    <div class="fw-bold text-danger" t-esc="state.stats.cancelled_count"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card wc-panel h-100">
+                        <div class="wc-panel-header"><i class="fa fa-server text-indigo me-2"></i> Configured Stores</div>
+                        <div class="card-body p-0">
+                            <table class="table align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Store Name</th>
+                                        <th>Environment</th>
+                                        <th>Endpoint</th>
+                                        <th>Connection</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="state.stores" t-as="store" t-key="store.id">
+                                        <tr class="wc-clickable-row" t-on-click="() => this.openStore(store.id)" style="cursor: pointer;">
+                                            <td><strong><a href="#" class="text-decoration-none text-indigo font-weight-bold" t-on-click.prevent="() => this.openStore(store.id)"><t t-esc="store.name"/></a></strong></td>
+                                            <td>
+                                                <span t-if="store.use_sandbox" class="badge bg-warning text-dark">Sandbox</span>
+                                                <span t-else="" class="badge bg-info">Live</span>
+                                            </td>
+                                            <td><code><t t-esc="store.url or 'N/A'"/></code></td>
+                                            <td>
+                                                <span t-if="store.active" class="badge bg-success"><i class="fa fa-check-circle"></i> Active</span>
+                                                <span t-else="" class="badge bg-secondary">Inactive</span>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <tr t-if="!state.stores.length">
+                                        <td colspan="4" class="text-center p-4 text-muted">No stores configured.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card wc-panel">
+                        <div class="wc-panel-header"><i class="fa fa-history text-indigo me-2"></i> Recent Synchronized Orders</div>
+                        <div class="card-body p-0">
+                            <t t-if="state.recentOrders.length">
+                                <div class="table-responsive">
+                                    <table class="table align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Order Reference</th>
+                                                <th>WooCommerce ID</th>
+                                                <th>Sync Date</th>
+                                                <th>Status</th>
+                                                <th class="text-end">Total Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="state.recentOrders" t-as="order" t-key="order.id">
+                                                <tr class="wc-clickable-row" t-on-click="() => this.openOrder(order.id)" style="cursor: pointer;">
+                                                    <td><strong><a href="#" class="text-decoration-none text-indigo font-weight-bold" t-on-click.prevent="() => this.openOrder(order.id)"><t t-esc="order.name"/></a></strong></td>
+                                                    <td><code><t t-esc="order.external_id"/></code></td>
+                                                    <td><t t-esc="order.date"/></td>
+                                                    <td>
+                                                        <span t-attf-class="badge bg-{{order.status_code == 'completed' ? 'success' : order.status_code == 'processing' ? 'primary' : 'secondary'}}" t-esc="order.status"/>
+                                                    </td>
+                                                    <td class="text-end fw-bold"><t t-esc="formatCurrency(order.total)"/></td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div class="text-center p-4 text-muted">No recent orders synchronized yet.</div>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>
