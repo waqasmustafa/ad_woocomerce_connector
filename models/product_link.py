@@ -212,6 +212,13 @@ class WooProduct(models.Model):
                 "weight": weight,
             })
             existing.with_context(syncing_from_wc=True).write(vals)
+            if images and not existing.product_id.product_tmpl_id.image_1920:
+                first_url = images.split(",")[0].strip()
+                img_b64 = _fetch_image_b64(first_url)
+                if img_b64:
+                    existing.product_id.product_tmpl_id.with_context(
+                        syncing_from_wc=True
+                    ).write({"image_1920": img_b64})
             return existing, "updated"
 
         odoo_product = None
@@ -587,6 +594,13 @@ class WooProductTemplate(models.Model):
                 "list_price": list_price,
             })
             existing.with_context(syncing_from_wc=True).write(vals)
+            if images and not existing.template_id.image_1920:
+                first_url = images.split(",")[0].strip()
+                img_b64 = _fetch_image_b64(first_url)
+                if img_b64:
+                    existing.template_id.with_context(
+                        syncing_from_wc=True
+                    ).write({"image_1920": img_b64})
             self._sync_variations(backend, existing, record, force, results)
             return existing, "updated"
 
