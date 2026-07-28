@@ -213,11 +213,11 @@ class WooProduct(models.Model):
             if not force and self._is_up_to_date(existing, record):
                 return existing, "skipped"
             _prod_vals = {
-                "name": name,
                 "default_code": sku or existing.product_id.default_code,
                 "weight": weight,
             }
             if not existing.is_variation:
+                _prod_vals["name"] = name
                 _prod_vals["list_price"] = list_price
             existing.product_id.with_context(syncing_from_wc=True).write(_prod_vals)
             existing.with_context(syncing_from_wc=True).write(vals)
@@ -289,13 +289,9 @@ class WooProduct(models.Model):
                     odoo_product = self.env["product.product"].with_context(
                         syncing_from_wc=True
                     ).create({
-                        "name": name,
+                        "product_tmpl_id": parent_tmpl.id,
                         "default_code": sku or False,
-                        "type": product_type if product_type in ("consu", "service") else "consu",
-                        "categ_id": categ_id,
                         "weight": weight,
-                        "sale_ok": True,
-                        "purchase_ok": True,
                     })
             else:
                 odoo_product = self.env["product.product"].with_context(
