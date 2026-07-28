@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_wc_root"
+              name="WooCommerce"
+              web_icon="ad_woocomerce_connector,static/description/icon.png"
+              sequence="35"/>
+
+    <menuitem id="menu_wc_dashboard"
+              name="Dashboard"
+              parent="menu_wc_root"
+              action="action_wc_dashboard"
+              sequence="0"/>
+
+    <menuitem id="menu_wc_stores"
+              name="Stores"
+              parent="menu_wc_root"
+              action="action_wc_store"
+              sequence="1"/>
+
+    <menuitem id="menu_wc_data"
+              name="Synced Data"
+              parent="menu_wc_root"
+              sequence="10"/>
+
+    <menuitem id="menu_wc_data_orders"
+              name="Orders"
+              parent="menu_wc_data"
+              action="action_wc_order"
+              sequence="1"/>
+
+    <menuitem id="menu_wc_data_products"
+              name="Products"
+              parent="menu_wc_data"
+              action="action_wc_product_link"
+              sequence="2"/>
+
+    <menuitem id="menu_wc_data_customers"
+              name="Customers"
+              parent="menu_wc_data"
+              action="action_wc_customer_link"
+              sequence="3"/>
+
+    <menuitem id="menu_wc_data_categories"
+              name="Categories"
+              parent="menu_wc_data"
+              action="action_wc_category_link"
+              sequence="4"/>
+
+    <menuitem id="menu_wc_data_tags"
+              name="Tags"
+              parent="menu_wc_data"
+              action="action_wc_tag"
+              sequence="5"/>
+
+    <menuitem id="menu_wc_data_attributes"
+              name="Attributes"
+              parent="menu_wc_data"
+              action="action_wc_attribute_link"
+              sequence="6"/>
+
+    <menuitem id="menu_wc_config"
+              name="Configuration"
+              parent="menu_wc_root"
+              sequence="20"/>
+
+    <menuitem id="menu_wc_config_order_status"
+              name="Order Statuses"
+              parent="menu_wc_config"
+              action="action_wc_order_stage"
+              sequence="1"/>
+
+    <menuitem id="menu_wc_config_payment"
+              name="Payment Methods"
+              parent="menu_wc_config"
+              action="action_wc_payment_mode"
+              sequence="2"/>
+
+    <menuitem id="menu_wc_config_shipping"
+              name="Shipping Methods"
+              parent="menu_wc_config"
+              action="action_wc_shipping_carrier"
+              sequence="3"/>
+
+    <menuitem id="menu_wc_config_taxes"
+              name="Tax Rates"
+              parent="menu_wc_config"
+              action="action_wc_tax_link"
+              sequence="4"/>
+
+    <menuitem id="menu_wc_tools"
+              name="Tools"
+              parent="menu_wc_root"
+              sequence="30"/>
+
+    <menuitem id="menu_wc_tools_sync_wizard"
+              name="Run Manual Sync"
+              parent="menu_wc_tools"
+              action="action_wc_sync_wizard"
+              sequence="1"/>
+
+</odoo>

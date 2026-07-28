@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_wc_category_link_list" model="ir.ui.view">
+        <field name="name">wc.category.link.list</field>
+        <field name="model">wc.category.link</field>
+        <field name="arch" type="xml">
+            <list string="WooCommerce Categories">
+                <field name="name"/>
+                <field name="external_id"/>
+                <field name="wc_slug"/>
+                <field name="wc_count"/>
+                <field name="backend_id"/>
+                <field name="sync_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_wc_category_link_form" model="ir.ui.view">
+        <field name="name">wc.category.link.form</field>
+        <field name="model">wc.category.link</field>
+        <field name="arch" type="xml">
+            <form string="WooCommerce Category">
+                <header>
+                    <button name="push_to_store" string="Push to WooCommerce" type="object" class="btn-primary"/>
+                    <button name="pull_from_store" string="Pull from WooCommerce" type="object" invisible="not external_id"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="category_id"/>
+                            <field name="wc_parent_id"/>
+                        </group>
+                        <group>
+                            <field name="external_id" readonly="1"/>
+                            <field name="backend_id"/>
+                            <field name="wc_slug"/>
+                            <field name="wc_count"/>
+                            <field name="sync_date"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="wc_description"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_wc_category_link" model="ir.actions.act_window">
+        <field name="name">WooCommerce Categories</field>
+        <field name="res_model">wc.category.link</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_push_wc_category_to_store_server" model="ir.actions.server">
+        <field name="name">Push to WooCommerce</field>
+        <field name="model_id" ref="ad_woocomerce_connector.model_wc_category_link"/>
+        <field name="binding_model_id" ref="ad_woocomerce_connector.model_wc_category_link"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+            if records:
+                action = records.push_to_store()
+        </field>
+    </record>
+
+    <record id="action_pull_wc_category_from_store_server" model="ir.actions.server">
+        <field name="name">Pull from WooCommerce</field>
+        <field name="model_id" ref="ad_woocomerce_connector.model_wc_category_link"/>
+        <field name="binding_model_id" ref="ad_woocomerce_connector.model_wc_category_link"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+            if records:
+                action = records.pull_from_store()
+        </field>
+    </record>
+
+</odoo>
