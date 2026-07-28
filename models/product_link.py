@@ -221,9 +221,6 @@ class WooProduct(models.Model):
                 _prod_vals["name"] = name
                 _prod_vals["list_price"] = list_price
             existing.product_id.with_context(syncing_from_wc=True).write(_prod_vals)
-            existing.product_id.product_tmpl_id.with_context(syncing_from_wc=True).write(
-                {"is_storable": True}
-            )
             existing.with_context(syncing_from_wc=True).write(vals)
             if images:
                 first_url = images.split(",")[0].strip()
@@ -278,9 +275,6 @@ class WooProduct(models.Model):
                     "default_code": sku or False,
                     "barcode": sku or False,
                 })
-                odoo_product.product_tmpl_id.with_context(syncing_from_wc=True).write(
-                    {"is_storable": True}
-                )
             elif parent_tmpl:
                 # Reuse template's unbound default variant
                 unused = parent_tmpl.product_variant_ids.filtered(
@@ -303,7 +297,6 @@ class WooProduct(models.Model):
                         "barcode": sku or False,
                         "weight": weight,
                     })
-                parent_tmpl.with_context(syncing_from_wc=True).write({"is_storable": True})
             else:
                 odoo_product = self.env["product.product"].with_context(
                     syncing_from_wc=True
@@ -312,7 +305,6 @@ class WooProduct(models.Model):
                     "default_code": sku,
                     "barcode": sku or False,
                     "type": product_type if product_type in ("consu", "service") else "consu",
-                    "is_storable": True,
                     "categ_id": categ_id,
                     "list_price": list_price,
                     "weight": weight,
@@ -655,7 +647,6 @@ class WooProductTemplate(models.Model):
             existing.template_id.with_context(syncing_from_wc=True).write({
                 "name": name,
                 "list_price": list_price,
-                "is_storable": True,
             })
             existing.with_context(syncing_from_wc=True).write(vals)
             if images and not existing.template_id.image_1920:
@@ -695,7 +686,6 @@ class WooProductTemplate(models.Model):
                 "list_price": list_price,
                 "default_code": tmpl_sku or odoo_tmpl.default_code,
                 "barcode": tmpl_sku or odoo_tmpl.barcode,
-                "is_storable": True,
             })
         else:
             categ_id = (
@@ -709,7 +699,6 @@ class WooProductTemplate(models.Model):
             ).create({
                 "name": name,
                 "type": _ptype if _ptype in ("consu", "service") else "consu",
-                "is_storable": True,
                 "categ_id": categ_id,
                 "list_price": list_price,
                 "sale_ok": True,

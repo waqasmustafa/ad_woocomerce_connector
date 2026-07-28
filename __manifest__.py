@@ -50,7 +50,7 @@ Core Features:
     'price': 49.00,
     'currency': 'USD',
 
-    'version': '18.0.1.0',
+    'version': '19.0.1.0',
     'license': 'LGPL-3',
     'category': 'Sales/Sales',
 
