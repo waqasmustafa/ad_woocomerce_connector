@@ -167,8 +167,10 @@ class WooProduct(models.Model):
         product_type = backend.default_product_type or "consu"
 
         regular_price_raw = record.get("regular_price") or record.get("price") or ""
+        sale_price_raw = record.get("sale_price") or ""
+        price_for_list = sale_price_raw or regular_price_raw
         try:
-            list_price = float(regular_price_raw) if regular_price_raw else 0.0
+            list_price = float(price_for_list) if price_for_list else 0.0
         except (ValueError, TypeError):
             list_price = 0.0
 
@@ -622,8 +624,10 @@ class WooProductTemplate(models.Model):
         )
 
         regular_price_raw = record.get("regular_price") or record.get("price") or ""
+        sale_price_raw = record.get("sale_price") or ""
+        price_for_list = sale_price_raw or regular_price_raw
         try:
-            list_price = float(regular_price_raw) if regular_price_raw else 0.0
+            list_price = float(price_for_list) if price_for_list else 0.0
         except (ValueError, TypeError):
             list_price = 0.0
 
@@ -750,7 +754,7 @@ class WooProductTemplate(models.Model):
 
         attr_value_map = {}
         for aname, options in all_attrs.items():
-            attr = self.env["product.attribute"].search([("name", "=", aname)], limit=1)
+            attr = self.env["product.attribute"].search([("name", "=ilike", aname)], limit=1)
             if not attr:
                 attr = self.env["product.attribute"].with_context(syncing_from_wc=True).create(
                     {"name": aname}
@@ -760,7 +764,7 @@ class WooProductTemplate(models.Model):
             attr_value_map[aname] = {}
             for option in options:
                 val = self.env["product.attribute.value"].search([
-                    ("attribute_id", "=", attr.id), ("name", "=", option),
+                    ("attribute_id", "=", attr.id), ("name", "=ilike", option),
                 ], limit=1)
                 if not val:
                     val = self.env["product.attribute.value"].with_context(
@@ -894,7 +898,7 @@ class WooProductTemplate(models.Model):
         if not var_records or not attr_value_map:
             return
 
-        # Collect (ptav_id_list, price) for every variation
+        # Collect (ptav_id_list, options_by_attr, price) for every variation
         variant_price_data = []
         for var in var_records:
             price_raw = (
@@ -911,6 +915,7 @@ class WooProductTemplate(models.Model):
                 continue
 
             ptav_ids = []
+            options = {}
             for vattr in var.get("attributes", []):
                 aname = (vattr.get("name") or "").strip()
                 option = (vattr.get("option") or "").strip()
@@ -922,27 +927,59 @@ class WooProductTemplate(models.Model):
                     ], limit=1)
                     if ptav:
                         ptav_ids.append(ptav.id)
+                        options[aname] = option
 
             if ptav_ids:
-                variant_price_data.append((ptav_ids, price))
+                variant_price_data.append((ptav_ids, options, price))
 
         if not variant_price_data:
             return
 
-        prices = [p for _, p in variant_price_data]
+        prices = [p for _, _, p in variant_price_data]
         base_price = min(prices)
 
         # Update template base price
         odoo_tmpl.with_context(syncing_from_wc=True).write({"list_price": base_price})
 
-        # Only set price_extra for single-attribute products (1 PTAV per variant).
-        # Multi-attribute products (additive pricing) are left at the base price.
-        if not all(len(ptav_ids) == 1 for ptav_ids, _ in variant_price_data):
+        if all(len(ptav_ids) == 1 for ptav_ids, _, _ in variant_price_data):
+            for ptav_ids, _options, price in variant_price_data:
+                ptav = self.env["product.template.attribute.value"].browse(ptav_ids[0])
+                ptav.with_context(syncing_from_wc=True).write({"price_extra": price - base_price})
             return
 
-        for ptav_ids, price in variant_price_data:
-            ptav = self.env["product.template.attribute.value"].browse(ptav_ids[0])
-            ptav.with_context(syncing_from_wc=True).write({"price_extra": price - base_price})
+        # Multiple attributes: look for a single attribute line whose value alone
+        # explains every variant's price difference from the base price (e.g. a
+        # "Packing" attribute that changes price while "Size" does not).
+        for driver_name in attr_value_map:
+            extras = {}
+            consistent = True
+            for _ptav_ids, options, price in variant_price_data:
+                option = options.get(driver_name)
+                if option is None:
+                    consistent = False
+                    break
+                extra = price - base_price
+                if option in extras and abs(extras[option] - extra) > 0.01:
+                    consistent = False
+                    break
+                extras[option] = extra
+            if not consistent:
+                continue
+
+            for aname, options_map in attr_value_map.items():
+                for option, val_id in options_map.items():
+                    ptav = self.env["product.template.attribute.value"].search([
+                        ("product_tmpl_id", "=", odoo_tmpl.id),
+                        ("product_attribute_value_id", "=", val_id),
+                    ], limit=1)
+                    if not ptav:
+                        continue
+                    extra = extras.get(option, 0.0) if aname == driver_name else 0.0
+                    ptav.with_context(syncing_from_wc=True).write({"price_extra": extra})
+            return
+
+        # No single attribute explains the price differences - leave everything
+        # at the base price rather than guess.
 
     def pull_from_store(self):
         def _op(binding):
