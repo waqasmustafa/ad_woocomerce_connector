@@ -166,6 +166,13 @@ class WooOrder(models.Model):
         binding_vals["order_id"] = odoo_order.id
         binding = self.with_context(syncing_from_wc=True).create(binding_vals)
         self._sync_order_lines(backend, binding, record)
+        try:
+            odoo_order.with_context(syncing_from_wc=True).action_confirm()
+        except Exception:
+            _logger.exception(
+                "Could not auto-confirm sale order %s for WooCommerce order %s",
+                odoo_order.name, ext_id,
+            )
         _logger.info("Created wc.order %s for WooCommerce order %s", binding.id, ext_id)
         return binding, "created"
 
