@@ -176,7 +176,8 @@ class WooProduct(models.Model):
 
         weight_raw = record.get("weight") or ""
         try:
-            weight = float(weight_raw) if weight_raw else 0.0
+            # Store's weight unit is grams; Odoo's weight field is kilograms.
+            weight = float(weight_raw) / 1000.0 if weight_raw else 0.0
         except (ValueError, TypeError):
             weight = 0.0
 
