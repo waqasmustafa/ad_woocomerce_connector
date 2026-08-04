@@ -177,17 +177,40 @@ class WooOrder(models.Model):
         return binding, "created"
 
     def _sync_order_lines(self, backend, binding, record: dict):
+        """Idempotently sync WooCommerce order lines to Odoo.
+
+        Each incoming item is matched to an existing wc.order.line by its
+        WooCommerce external_id and updated in place; only truly new items
+        create a new sale.order.line. This must not depend on the sale
+        order's state (draft vs confirmed) — doing so previously caused
+        lines to be duplicated on every re-sync of an already-confirmed
+        order, since the old "delete all, recreate all" cleanup only ran
+        while the order was still a draft.
+        """
         order = binding.order_id
+        existing_by_ext_id = {wl.external_id: wl for wl in binding.wc_line_ids}
+        seen_ext_ids = set()
 
-        if order.state in ("draft", "sent"):
-            binding.wc_line_ids.unlink()
-            order.order_line.filtered(
-                lambda l: l.wc_line_id
-            ).unlink()
-
-        lines_vals = []
+        def _upsert_line(ext_id, sol_vals, wc_extra_vals):
+            seen_ext_ids.add(ext_id)
+            wc_line = existing_by_ext_id.get(ext_id)
+            if wc_line:
+                wc_line.line_id.with_context(syncing_from_wc=True).write(sol_vals)
+                wc_line.with_context(syncing_from_wc=True).write(wc_extra_vals)
+            else:
+                sol = self.env["sale.order.line"].with_context(
+                    syncing_from_wc=True
+                ).create(dict(sol_vals, order_id=order.id))
+                self.env["wc.order.line"].with_context(syncing_from_wc=True).create({
+                    **wc_extra_vals,
+                    "wc_order_id": binding.id,
+                    "line_id": sol.id,
+                    "external_id": ext_id,
+                    "backend_id": backend.id,
+                })
 
         for item in record.get("line_items", []):
+            ext_id = str(item.get("id", ""))
             product = self.env["wc.product.link"].get_or_create_for_order_line(backend, item)
 
             qty = self._safe_float(item.get("quantity"), default=1.0)
@@ -197,28 +220,21 @@ class WooOrder(models.Model):
             tax_ids = self._resolve_line_taxes(backend, item, record)
 
             sol_vals = {
-                "order_id": order.id,
                 "product_id": product.id,
                 "name": (item.get("name") or product.name or ""),
                 "product_uom_qty": qty,
                 "price_unit": price,
                 "product_uom_id": product.uom_id.id,
                 "tax_ids": [(6, 0, tax_ids)],
-                "wc_line_id": str(item.get("id", "")),
+                "wc_line_id": ext_id,
             }
-            sol = self.env["sale.order.line"].with_context(
-                syncing_from_wc=True
-            ).create(sol_vals)
-            lines_vals.append({
-                "wc_order_id": binding.id,
-                "line_id": sol.id,
-                "external_id": str(item.get("id", "")),
-                "backend_id": backend.id,
+            _upsert_line(ext_id, sol_vals, {
                 "wc_line_total": self._safe_float(item.get("total")),
                 "wc_line_tax": self._safe_float(item.get("total_tax")),
             })
 
         for ship in record.get("shipping_lines", []):
+            ext_id = str(ship.get("id", ""))
             carrier_product = self._resolve_shipping_product(backend, ship)
             if not carrier_product:
                 carrier_product = self._get_or_create_shipping_product(
@@ -228,58 +244,51 @@ class WooOrder(models.Model):
             if not carrier_product:
                 continue
 
-            ship_vals = {
-                "order_id": order.id,
+            sol_vals = {
                 "product_id": carrier_product.id,
                 "name": ship.get("method_title") or "Shipping",
                 "product_uom_qty": 1,
                 "price_unit": self._safe_float(ship.get("total")),
                 "product_uom_id": carrier_product.uom_id.id,
                 "is_delivery": True,
-                "wc_line_id": str(ship.get("id", "")),
+                "wc_line_id": ext_id,
             }
-            sol = self.env["sale.order.line"].with_context(
-                syncing_from_wc=True
-            ).create(ship_vals)
-            lines_vals.append({
-                "wc_order_id": binding.id,
-                "line_id": sol.id,
-                "external_id": str(ship.get("id", "")),
-                "backend_id": backend.id,
+            _upsert_line(ext_id, sol_vals, {
                 "wc_line_total": self._safe_float(ship.get("total")),
                 "wc_line_tax": self._safe_float(ship.get("total_tax")),
             })
 
         for fee in record.get("fee_lines", []):
+            ext_id = str(fee.get("id", ""))
             fee_product = backend.default_fee_product_id
             if not fee_product:
                 fee_product = self._get_or_create_fee_product(fee.get("name") or "Fee")
             if not fee_product:
                 continue
 
-            fee_line_vals = {
-                "order_id": order.id,
+            sol_vals = {
                 "product_id": fee_product.id,
                 "name": fee.get("name") or "Fee",
                 "product_uom_qty": 1,
                 "price_unit": self._safe_float(fee.get("total")),
                 "product_uom_id": fee_product.uom_id.id,
-                "wc_line_id": str(fee.get("id", "")),
+                "wc_line_id": ext_id,
             }
-            sol = self.env["sale.order.line"].with_context(
-                syncing_from_wc=True
-            ).create(fee_line_vals)
-            lines_vals.append({
-                "wc_order_id": binding.id,
-                "line_id": sol.id,
-                "external_id": str(fee.get("id", "")),
-                "backend_id": backend.id,
+            _upsert_line(ext_id, sol_vals, {
                 "wc_line_total": self._safe_float(fee.get("total")),
                 "wc_line_tax": self._safe_float(fee.get("total_tax")),
             })
 
-        for lv in lines_vals:
-            self.env["wc.order.line"].with_context(syncing_from_wc=True).create(lv)
+        # Lines that existed before but are no longer part of the WooCommerce
+        # order (e.g. an item was removed) get cleaned up.
+        stale_ext_ids = set(existing_by_ext_id) - seen_ext_ids
+        if stale_ext_ids:
+            stale_wc_lines = binding.wc_line_ids.filtered(
+                lambda wl: wl.external_id in stale_ext_ids
+            )
+            stale_sol = stale_wc_lines.mapped("line_id")
+            stale_wc_lines.unlink()
+            stale_sol.unlink()
 
     def _resolve_partner(self, backend, record: dict):
         cust_id = record.get("customer_id", 0)
