@@ -76,6 +76,9 @@
                     <span>Push WC Status</span>
                 </button>
             </xpath>
+            <xpath expr="//group[@name='sale_total']/field[@name='tax_totals']" position="before">
+                <field name="total_weight" widget="float" string="Total Weight (kg)"/>
+            </xpath>
         </field>
     </record>
 

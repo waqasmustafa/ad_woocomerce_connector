@@ -527,6 +527,20 @@ class SaleOrderWoo(models.Model):
         compute="_compute_all_deliveries_done",
         store=True,
     )
+    total_weight = fields.Float(
+        string="Total Weight (kg)",
+        compute="_compute_total_weight",
+        store=False,
+    )
+
+    @api.depends("order_line.product_id.weight", "order_line.product_uom_qty")
+    def _compute_total_weight(self):
+        for order in self:
+            order.total_weight = sum(
+                line.product_id.weight * line.product_uom_qty
+                for line in order.order_line
+                if not line.display_type
+            )
 
     @api.depends("wc_bind_ids", "wc_bind_ids.wc_status_id")
     def _compute_wc_order_stage(self):
