@@ -611,3 +611,19 @@ class SaleOrderLineWoo(models.Model):
              "snapshot so it does not change if the product's price is "
              "updated later.",
     )
+    wc_discount_amount = fields.Monetary(
+        string="Discount",
+        currency_field="currency_id",
+        help="Discount as a flat amount per unit (e.g. 200), instead of a "
+             "percentage. Subtotal = (Unit Price - Discount) x Quantity. "
+             "Internally converted to the standard discount percentage so "
+             "taxes and totals keep computing normally.",
+    )
+
+    @api.onchange("wc_discount_amount", "price_unit")
+    def _onchange_wc_discount_amount(self):
+        for line in self:
+            if line.price_unit:
+                line.discount = (line.wc_discount_amount / line.price_unit) * 100.0
+            else:
+                line.discount = 0.0

@@ -82,6 +82,9 @@
             <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']" position="before">
                 <field name="wc_actual_price" string="Actual Price" optional="show"/>
             </xpath>
+            <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']" position="after">
+                <field name="wc_discount_amount" string="Discount" optional="show"/>
+            </xpath>
         </field>
     </record>
 
