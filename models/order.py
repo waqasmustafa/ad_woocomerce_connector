@@ -191,16 +191,19 @@ class WooOrder(models.Model):
         existing_by_ext_id = {wl.external_id: wl for wl in binding.wc_line_ids}
         seen_ext_ids = set()
 
-        def _upsert_line(ext_id, sol_vals, wc_extra_vals):
+        def _upsert_line(ext_id, sol_vals, wc_extra_vals, create_only_vals=None):
             seen_ext_ids.add(ext_id)
             wc_line = existing_by_ext_id.get(ext_id)
             if wc_line:
                 wc_line.line_id.with_context(syncing_from_wc=True).write(sol_vals)
                 wc_line.with_context(syncing_from_wc=True).write(wc_extra_vals)
             else:
+                create_vals = dict(sol_vals, order_id=order.id)
+                if create_only_vals:
+                    create_vals.update(create_only_vals)
                 sol = self.env["sale.order.line"].with_context(
                     syncing_from_wc=True
-                ).create(dict(sol_vals, order_id=order.id))
+                ).create(create_vals)
                 self.env["wc.order.line"].with_context(syncing_from_wc=True).create({
                     **wc_extra_vals,
                     "wc_order_id": binding.id,
@@ -228,10 +231,14 @@ class WooOrder(models.Model):
                 "tax_ids": [(6, 0, tax_ids)],
                 "wc_line_id": ext_id,
             }
+            # Snapshot the product's current WooCommerce regular (pre-discount)
+            # price onto the line at creation time only, so it stays fixed for
+            # this order even if the product's price changes afterwards.
+            actual_price = self._safe_float(product.wc_bind_ids[:1].wc_regular_price)
             _upsert_line(ext_id, sol_vals, {
                 "wc_line_total": self._safe_float(item.get("total")),
                 "wc_line_tax": self._safe_float(item.get("total_tax")),
-            })
+            }, create_only_vals={"wc_actual_price": actual_price})
 
         for ship in record.get("shipping_lines", []):
             ext_id = str(ship.get("id", ""))
@@ -594,4 +601,13 @@ class SaleOrderLineWoo(models.Model):
         inverse_name="line_id",
         string="WooCommerce Line Bindings",
         copy=False,
+    )
+    wc_actual_price = fields.Monetary(
+        string="Actual Price",
+        currency_field="currency_id",
+        copy=False,
+        help="WooCommerce regular (pre-discount) price of the product, "
+             "captured when this line was first created. Kept as a "
+             "snapshot so it does not change if the product's price is "
+             "updated later.",
     )
