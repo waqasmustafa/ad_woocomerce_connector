@@ -616,14 +616,16 @@ class SaleOrderLineWoo(models.Model):
         currency_field="currency_id",
         help="Discount as a flat amount per unit (e.g. 200), instead of a "
              "percentage. Subtotal = (Unit Price - Discount) x Quantity. "
-             "Internally converted to the standard discount percentage so "
-             "taxes and totals keep computing normally.",
+             "Applied directly to the subtotal/tax computation without "
+             "touching the standard Disc.% field.",
     )
 
-    @api.onchange("wc_discount_amount", "price_unit")
-    def _onchange_wc_discount_amount(self):
-        for line in self:
-            if line.price_unit:
-                line.discount = (line.wc_discount_amount / line.price_unit) * 100.0
-            else:
-                line.discount = 0.0
+    @api.depends("product_uom_qty", "discount", "price_unit", "tax_ids", "wc_discount_amount")
+    def _compute_amount(self):
+        return super()._compute_amount()
+
+    def _prepare_base_line_for_taxes_computation(self, **kwargs):
+        if self.wc_discount_amount:
+            kwargs.setdefault("price_unit", self.price_unit - self.wc_discount_amount)
+            kwargs.setdefault("discount", 0.0)
+        return super()._prepare_base_line_for_taxes_computation(**kwargs)
