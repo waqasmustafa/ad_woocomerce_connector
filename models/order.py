@@ -634,12 +634,21 @@ class SaleOrderLineWoo(models.Model):
         res = super()._prepare_invoice_line(**optional_values)
         if self.wc_discount_amount:
             res["wc_discount_amount"] = self.wc_discount_amount
+        if self.wc_actual_price:
+            res["wc_actual_price"] = self.wc_actual_price
         return res
 
 
 class AccountMoveLineWoo(models.Model):
     _inherit = "account.move.line"
 
+    wc_actual_price = fields.Monetary(
+        string="Regular Price",
+        currency_field="currency_id",
+        copy=False,
+        help="WooCommerce regular (pre-discount) price, carried over from "
+             "the sales order line snapshot when the invoice was created.",
+    )
     wc_discount_amount = fields.Monetary(
         string="Discount",
         currency_field="currency_id",
