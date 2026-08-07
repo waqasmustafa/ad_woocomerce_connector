@@ -629,3 +629,37 @@ class SaleOrderLineWoo(models.Model):
             kwargs.setdefault("price_unit", self.price_unit - self.wc_discount_amount)
             kwargs.setdefault("discount", 0.0)
         return super()._prepare_base_line_for_taxes_computation(**kwargs)
+
+    def _prepare_invoice_line(self, **optional_values):
+        res = super()._prepare_invoice_line(**optional_values)
+        if self.wc_discount_amount:
+            res["wc_discount_amount"] = self.wc_discount_amount
+        return res
+
+
+class AccountMoveLineWoo(models.Model):
+    _inherit = "account.move.line"
+
+    wc_discount_amount = fields.Monetary(
+        string="Discount",
+        currency_field="currency_id",
+        copy=False,
+        help="Flat per-unit discount amount carried over from the sales "
+             "order line. Applied directly to the subtotal/tax "
+             "computation without touching the standard Disc.% field.",
+    )
+
+    @api.depends("quantity", "discount", "price_unit", "tax_ids", "currency_id", "wc_discount_amount")
+    def _compute_totals(self):
+        return super()._compute_totals()
+
+
+class AccountMoveWoo(models.Model):
+    _inherit = "account.move"
+
+    def _prepare_product_base_line_for_taxes_computation(self, product_line):
+        results = super()._prepare_product_base_line_for_taxes_computation(product_line)
+        if product_line.wc_discount_amount:
+            results["price_unit"] = product_line.price_unit - product_line.wc_discount_amount
+            results["discount"] = 0.0
+        return results

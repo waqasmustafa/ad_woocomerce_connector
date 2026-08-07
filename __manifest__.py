@@ -82,6 +82,7 @@ Core Features:
         'views/product_link_views.xml',
         'views/customer_views.xml',
         'views/order_views.xml',
+        'views/report_invoice.xml',
         'views/wc_store_views.xml',
         'views/dashboard_views.xml',
         'views/menu.xml',
