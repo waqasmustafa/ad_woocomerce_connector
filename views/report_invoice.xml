@@ -32,6 +32,9 @@
         <xpath expr="//t[@t-call='account.document_tax_totals']/t[@t-set='tax_totals']" position="after">
             <t t-set="tax_totals" t-value="dict(tax_totals, wc_total_discount=sum(o.invoice_line_ids.mapped('wc_discount_amount')))"/>
         </xpath>
+        <xpath expr="//p[@name='payment_communication']" position="after">
+            <p name="wc_query_contact_note">In case of any query, please contact us within 24 hours.</p>
+        </xpath>
     </template>
 
     <template id="document_tax_totals_wc_discount" inherit_id="account.document_tax_totals_template">
