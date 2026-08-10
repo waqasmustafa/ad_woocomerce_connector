@@ -623,10 +623,11 @@ class SaleOrderLineWoo(models.Model):
     wc_discount_amount = fields.Monetary(
         string="Discount",
         currency_field="currency_id",
-        help="Discount as a flat amount per unit (e.g. 200), instead of a "
-             "percentage. Subtotal = (Unit Price - Discount) x Quantity. "
-             "Applied directly to the subtotal/tax computation without "
-             "touching the standard Disc.% field.",
+        help="Discount as a flat amount for the whole line (e.g. 60 for 3 "
+             "units), instead of a percentage. Subtotal = (Unit Price - "
+             "Discount / Quantity) x Quantity. Applied directly to the "
+             "subtotal/tax computation without touching the standard "
+             "Disc.% field.",
     )
 
     @api.depends("product_uom_qty", "discount", "price_unit", "tax_ids", "wc_discount_amount")
@@ -634,8 +635,8 @@ class SaleOrderLineWoo(models.Model):
         return super()._compute_amount()
 
     def _prepare_base_line_for_taxes_computation(self, **kwargs):
-        if self.wc_discount_amount:
-            kwargs.setdefault("price_unit", self.price_unit - self.wc_discount_amount)
+        if self.wc_discount_amount and self.product_uom_qty:
+            kwargs.setdefault("price_unit", self.price_unit - (self.wc_discount_amount / self.product_uom_qty))
             kwargs.setdefault("discount", 0.0)
         return super()._prepare_base_line_for_taxes_computation(**kwargs)
 
@@ -683,7 +684,7 @@ class AccountMoveWoo(models.Model):
 
     def _prepare_product_base_line_for_taxes_computation(self, product_line):
         results = super()._prepare_product_base_line_for_taxes_computation(product_line)
-        if product_line.wc_discount_amount:
-            results["price_unit"] = product_line.price_unit - product_line.wc_discount_amount
+        if product_line.wc_discount_amount and product_line.quantity:
+            results["price_unit"] = product_line.price_unit - (product_line.wc_discount_amount / product_line.quantity)
             results["discount"] = 0.0
         return results
