@@ -43,8 +43,11 @@
         <xpath expr="//p[@name='payment_communication']" position="after">
             <p name="wc_query_contact_note">In case of any query, please contact us within 24 hours.</p>
         </xpath>
+        <xpath expr="//div[hasclass('page')]" position="attributes">
+            <attribute name="style">position: relative;</attribute>
+        </xpath>
         <xpath expr="//div[@name='comment']" position="after">
-            <div class="row mb-3" name="wc_prepared_checked_by">
+            <div class="row" name="wc_prepared_checked_by" style="position: absolute; bottom: 25mm; left: 0; right: 0;">
                 <div class="col-6">
                     <span>Prepared By: </span><span t-field="o.invoice_user_id.name"/>
                 </div>
