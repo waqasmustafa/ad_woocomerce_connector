@@ -30,7 +30,7 @@
             </td>
         </xpath>
         <xpath expr="//t[@t-call='account.document_tax_totals']/t[@t-set='tax_totals']" position="after">
-            <t t-set="tax_totals" t-value="dict(tax_totals, wc_total_discount=sum(o.invoice_line_ids.mapped('wc_discount_amount')))"/>
+            <t t-set="tax_totals" t-value="dict(tax_totals, wc_total_discount=sum(o.invoice_line_ids.mapped('wc_discount_amount')), wc_total_regular_amount=sum(l.wc_actual_price * l.quantity for l in o.invoice_line_ids))"/>
         </xpath>
         <xpath expr="//p[@name='payment_communication']" position="after">
             <p name="wc_query_contact_note">In case of any query, please contact us within 24 hours.</p>
@@ -39,6 +39,14 @@
 
     <template id="document_tax_totals_wc_discount" inherit_id="account.document_tax_totals_template">
         <xpath expr="//tr[hasclass('o_total')]" position="before">
+            <tr t-if="tax_totals.get('wc_total_regular_amount')" class="o_subtotal">
+                <td>
+                    <span>Regular Amount</span>
+                </td>
+                <td class="text-end">
+                    <span t-out="tax_totals.get('wc_total_regular_amount')" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: currency}">0</span>
+                </td>
+            </tr>
             <tr t-if="tax_totals.get('wc_total_discount')" class="o_subtotal">
                 <td>
                     <span>Total Discount</span>
