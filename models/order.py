@@ -224,7 +224,7 @@ class WooOrder(models.Model):
 
             sol_vals = {
                 "product_id": product.id,
-                "name": (item.get("name") or product.name or ""),
+                "name": (product.display_name or item.get("name") or product.name or ""),
                 "product_uom_qty": qty,
                 "price_unit": price,
                 "product_uom_id": product.uom_id.id,
