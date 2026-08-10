@@ -555,6 +555,15 @@ class SaleOrderWoo(models.Model):
         compute="_compute_total_weight",
         store=False,
     )
+    checked_by_id = fields.Many2one(
+        comodel_name="res.users",
+        string="Checked By",
+    )
+
+    def _prepare_invoice(self):
+        values = super()._prepare_invoice()
+        values["checked_by_id"] = self.checked_by_id.id
+        return values
 
     @api.depends("order_line.product_id.weight", "order_line.product_uom_qty")
     def _compute_total_weight(self):
@@ -665,6 +674,12 @@ class AccountMoveLineWoo(models.Model):
 
 class AccountMoveWoo(models.Model):
     _inherit = "account.move"
+
+    checked_by_id = fields.Many2one(
+        comodel_name="res.users",
+        string="Checked By",
+        copy=False,
+    )
 
     def _prepare_product_base_line_for_taxes_computation(self, product_line):
         results = super()._prepare_product_base_line_for_taxes_computation(product_line)

@@ -79,6 +79,9 @@
             <xpath expr="//group[@name='sale_total']/field[@name='tax_totals']" position="before">
                 <field name="total_weight" widget="float" string="Total Weight (kg)"/>
             </xpath>
+            <xpath expr="//field[@name='payment_term_id']" position="after">
+                <field name="checked_by_id"/>
+            </xpath>
             <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']" position="before">
                 <field name="wc_actual_price" string="Actual Price" optional="show"/>
             </xpath>

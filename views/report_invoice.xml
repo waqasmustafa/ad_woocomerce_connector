@@ -43,6 +43,16 @@
         <xpath expr="//p[@name='payment_communication']" position="after">
             <p name="wc_query_contact_note">In case of any query, please contact us within 24 hours.</p>
         </xpath>
+        <xpath expr="//div[@name='comment']" position="after">
+            <div class="row mb-3" name="wc_prepared_checked_by">
+                <div class="col-6">
+                    <span>Prepared By: </span><span t-field="o.invoice_user_id.name"/>
+                </div>
+                <div class="col-6 text-end">
+                    <span>Checked By: </span><span t-field="o.checked_by_id.name"/>
+                </div>
+            </div>
+        </xpath>
     </template>
 
     <template id="document_tax_totals_wc_discount" inherit_id="account.document_tax_totals_template">
