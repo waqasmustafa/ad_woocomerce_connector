@@ -255,7 +255,12 @@ class WooProduct(models.Model):
                 )
 
         is_var = parent_tmpl or record.get("parent_id") or record.get("is_variation") or False
-        if not odoo_product and not is_var:
+        # Only fall back to matching by name when the incoming WooCommerce
+        # product has no SKU at all. Several real, distinct products on this
+        # store share the exact same generic name (e.g. "Dental Material"),
+        # so matching by name whenever a SKU exists but doesn't match
+        # anything used to silently merge unrelated products together.
+        if not odoo_product and not is_var and not sku:
             odoo_product = self.env["product.product"].search(
                 [("name", "=", name)], limit=1
             )
@@ -755,11 +760,26 @@ class WooProductTemplate(models.Model):
 
         attr_value_map = {}
         for aname, options in all_attrs.items():
-            attr = self.env["product.attribute"].search([("name", "=ilike", aname)], limit=1)
-            if not attr:
-                attr = self.env["product.attribute"].with_context(syncing_from_wc=True).create(
-                    {"name": aname}
-                )
+            # Prefer an attribute already used on THIS template. The catalog has
+            # legacy case-duplicate attributes (e.g. "size" and "Size" as two
+            # separate records) — a blind catalog-wide search can arbitrarily
+            # pick the wrong one and split an existing product's variants
+            # across two attributes. Reusing whatever this template already
+            # has keeps every sync consistent for that product.
+            existing_line = self.env["product.template.attribute.line"].search([
+                ("product_tmpl_id", "=", odoo_tmpl.id),
+                ("attribute_id.name", "=ilike", aname),
+            ], limit=1)
+            if existing_line:
+                attr = existing_line.attribute_id
+            else:
+                attr = self.env["product.attribute"].search([("name", "=", aname)], limit=1)
+                if not attr:
+                    attr = self.env["product.attribute"].search([("name", "=ilike", aname)], limit=1)
+                if not attr:
+                    attr = self.env["product.attribute"].with_context(syncing_from_wc=True).create(
+                        {"name": aname}
+                    )
 
             val_ids = []
             attr_value_map[aname] = {}
@@ -811,8 +831,17 @@ class WooProductTemplate(models.Model):
         if not target_ptav_ids:
             return None
 
-        for pp in odoo_tmpl.product_variant_ids:
+        # Search all variants, including archived ones: Odoo sometimes creates
+        # the correctly-combined variant in an inactive state when a new
+        # attribute value is added, and product_variant_ids only lists active
+        # ones — missing it here used to spawn a duplicate blank variant.
+        all_variants = self.env["product.product"].with_context(active_test=False).search([
+            ("product_tmpl_id", "=", odoo_tmpl.id),
+        ])
+        for pp in all_variants:
             if set(pp.product_template_attribute_value_ids.ids) == target_ptav_ids:
+                if not pp.active:
+                    pp.with_context(syncing_from_wc=True).write({"active": True})
                 return pp
         return None
 
