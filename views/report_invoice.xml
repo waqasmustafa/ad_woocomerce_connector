@@ -34,7 +34,11 @@
         </xpath>
         <xpath expr="//td[@name='td_discount']" position="before">
             <td name="td_wc_discount" t-if="display_wc_discount" t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
-                <span class="text-nowrap" t-field="line.wc_discount_amount">0</span>
+                <t t-if="line.wc_discount_amount and line.quantity">
+                    <t t-set="wc_unit_discount" t-value="line.wc_discount_amount / line.quantity"/>
+                    <span class="text-nowrap" t-esc="'%.2f x %g = %.2f' % (wc_unit_discount, line.quantity, line.wc_discount_amount)"/>
+                </t>
+                <span t-else="" class="text-nowrap">0</span>
             </td>
         </xpath>
         <xpath expr="//t[@t-call='account.document_tax_totals']/t[@t-set='tax_totals']" position="after">
