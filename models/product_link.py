@@ -256,6 +256,33 @@ class WooProduct(models.Model):
                         ).write({"image_1920": img_b64})
             return existing, "updated"
 
+        # A variation can arrive on its own, outside the parent's full
+        # variation sync (e.g. its own webhook), so the attribute lines/values
+        # that sync normally sets up (see WooProductTemplate._sync_variations)
+        # never run. Replicate that step here using the same helpers, so the
+        # variant lands with its Length/Size/etc already correct instead of
+        # blank.
+        target_ptav_ids = []
+        if parent_tmpl and not existing_product and record.get("attributes"):
+            tmpl_link_model = self.env["wc.template.link"]
+            attr_value_map = tmpl_link_model._setup_variant_attributes(
+                parent_tmpl, [record], parent_tmpl.name
+            )
+            existing_product = tmpl_link_model._match_variant_by_attrs(
+                parent_tmpl, record.get("attributes", []), attr_value_map
+            )
+            if not existing_product:
+                for vattr in record.get("attributes", []):
+                    aname = (vattr.get("name") or "").strip()
+                    option = (vattr.get("option") or "").strip()
+                    if aname in attr_value_map and option in attr_value_map[aname]:
+                        ptav = self.env["product.template.attribute.value"].search([
+                            ("product_tmpl_id", "=", parent_tmpl.id),
+                            ("product_attribute_value_id", "=", attr_value_map[aname][option]),
+                        ], limit=1)
+                        if ptav:
+                            target_ptav_ids.append(ptav.id)
+
         odoo_product = None
         if sku and backend.match_product_by_sku:
             domain = [("default_code", "=", sku)]
@@ -306,19 +333,25 @@ class WooProduct(models.Model):
                 )
                 if unused:
                     odoo_product = unused[0]
-                    odoo_product.with_context(syncing_from_wc=True).write({
+                    _unused_vals = {
                         "default_code": sku or False,
                         "barcode": sku or False,
-                    })
+                    }
+                    if target_ptav_ids:
+                        _unused_vals["product_template_attribute_value_ids"] = [(6, 0, target_ptav_ids)]
+                    odoo_product.with_context(syncing_from_wc=True).write(_unused_vals)
                 else:
-                    odoo_product = self.env["product.product"].with_context(
-                        syncing_from_wc=True
-                    ).create({
+                    _create_vals = {
                         "product_tmpl_id": parent_tmpl.id,
                         "default_code": sku or False,
                         "barcode": sku or False,
                         "weight": weight,
-                    })
+                    }
+                    if target_ptav_ids:
+                        _create_vals["product_template_attribute_value_ids"] = [(6, 0, target_ptav_ids)]
+                    odoo_product = self.env["product.product"].with_context(
+                        syncing_from_wc=True
+                    ).create(_create_vals)
             else:
                 odoo_product = self.env["product.product"].with_context(
                     syncing_from_wc=True
