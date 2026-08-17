@@ -149,6 +149,20 @@ class WooProduct(models.Model):
         from datetime import datetime
         ext_id = str(record["id"])
 
+        if not parent_tmpl and record.get("parent_id"):
+            # A webhook can deliver a variation record on its own (its payload
+            # has no "type": "variable" marker, so it never routes through
+            # WooProductTemplate). Without resolving its parent here it would
+            # fall through to the "no parent_tmpl" branch below and spawn a
+            # brand new standalone product instead of attaching to the
+            # existing variable product.
+            parent_link = self.env["wc.template.link"].search([
+                ("backend_id", "=", backend.id),
+                ("external_id", "=", str(record["parent_id"])),
+            ], limit=1)
+            if parent_link:
+                parent_tmpl = parent_link.template_id
+
         existing = self.search([
             ("backend_id", "=", backend.id),
             ("external_id", "=", ext_id),
